@@ -2,8 +2,8 @@ import express from "express";
 import shortid from "shortid";
 import { MongoClient } from "mongodb";
 import cors from "cors";
-import * as dotenv from 'dotenv'
-dotenv.config()
+import * as dotenv from "dotenv";
+dotenv.config();
 const app = express();
 
 const PORT = process.env.PORT;
@@ -25,30 +25,34 @@ app.get("/url", async function (request, response) {
     .collection("urlshort")
     .find({})
     .toArray();
-  response.send(result);
-});
-
-app.post("/short", async function (request, response) {
-  const { url } = request.body;
-  const shortUrl = shortid.generate(url);
-  const result = await client.db("b42wd2").collection("urlshort").insertOne({
-    long_url: url,
-    short_url: shortUrl,
-  });
-  response.send({ message: "inserted Successfully", result: result });
+  response.send(result.splice(-1));
 });
 
 app.get("/:shorturl", async function (request, response) {
-  const { shortUrl } = request.params;
+  const { shorturl } = request.params;
   const urlFromDb = await client
     .db("b42wd2")
     .collection("urlshort")
-    .findOne({ short_url: shortUrl });
-  response.send("🙋‍♂️, 🌏 🎊✨🤩");
+    .findOne({ short_url: shorturl });
+
   if (!urlFromDb) {
     response.status(401).send({ message: "invalid url" });
   } else {
-    res.redirect(urlFromDb.long_url);
+    res.send(urlFromDb.long_url);
+  }
+});
+
+app.post("/create", async function (req, res) {
+  const { url } = req.body;
+  const shorturl = shortid.generate(url);
+  const result = await client.db("b42wd2").collection("urlshort").insertOne({
+    long_url: url,
+    short_url: shorturl,
+  });
+  if (result) {
+    res.send({ message: "insert Successfully", result: result });
+  } else {
+    res.status(401).send("Not authorized");
   }
 });
 app.listen(PORT, () => console.log(`The server started in: ${PORT} ✨✨`));
