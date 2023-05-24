@@ -19,14 +19,7 @@ app.use(express.json());
 app.get("/", function (request, response) {
   response.send("🙋‍♂️, 🌏 🎊✨🤩");
 });
-// app.get("/url", async function (request, response) {
-//   const result = await client
-//     .db("b42wd2")
-//     .collection("urlshort")
-//     .find({})
-//     .toArray();
-//   response.send(result.splice(-1));
-// });
+//
 
 // app.get("/:shorturl", async function (request, response) {
 //   const { shorturl } = request.params;
@@ -69,6 +62,28 @@ app.post("/create", async function (req, res) {
     res.send({ message: "insert successfully" });
   } else {
     res.status(401).send("Not authorized");
+  }
+});
+//get urls
+app.get("/url", async function (request, response) {
+  const result = await client
+    .db("b42wd2")
+    .collection("shortUrl")
+    .find({})
+    .toArray();
+  response.send(result);
+});
+//redirect url
+app.get("/:shorturl", async function (req, res) {
+  const { shortUrl } = req.params;
+  const urlFromDb = await client.db("b42wd2").collection("shortUrl").findOne({
+    shortUrl: shortUrl,
+  });
+  console.log(urlFromDb);
+  if (!urlFromDb) {
+    res.send({ message: "invalid url" });
+  } else {
+    res.redirect(urlFromDb.longUrl);
   }
 });
 app.listen(PORT, () => console.log(`The server started in: ${PORT} ✨✨`));
